@@ -2,6 +2,7 @@ import express from "express";
 import config from "config";
 import cors from "cors";
 import helmet from "helmet";
+import router from "./routes";
 
 async function main() {
   const app = express();
@@ -11,6 +12,9 @@ async function main() {
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Routes
+  app.use(router);
 
   const port = config.get<number>("port");
 
