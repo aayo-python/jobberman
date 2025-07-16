@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import { logger } from "./utils/logger";
 import { Histogram } from "prom-client";
 
 // Load environment variables
@@ -39,7 +40,7 @@ export function connectionScript(isTestEnvironment: boolean) {
     const testConnectionString = process.env.DATABASE_URL_TEST;
 
     if (!testConnectionString) {
-      console.log(
+      logger.warn(
         "DATABASE_URL_TEST is not defined, falling back to DATABASE_URL"
       );
       return connectionString;
@@ -59,8 +60,8 @@ const pool = new Pool({
 });
 
 // Log connection events
-pool.on("connect", () => console.log("Connected to PostgreSQL database"));
-pool.on("error", (err) => console.log(`PostgreSQL pool error: ${err}`));
+pool.on("connect", () => logger.info("Connected to PostgreSQL database"));
+pool.on("error", (err) => logger.error(`PostgreSQL pool error: ${err}`));
 
 // Create Prisma adapter and client
 const adapter = new PrismaPg(pool);
@@ -132,14 +133,14 @@ prisma.$on("query", (e) => {
 
       // Log slow queries (over 100ms)
       if (duration > 0.1) {
-        console.log(`Slow query (${duration.toFixed(3)}s): ${e.query}`);
+        logger.warn(`Slow query (${duration.toFixed(3)}s): ${e.query}`);
       }
     });
 });
 
 // Track database errors
 prisma.$on("error", (e) => {
-  console.log(`Prisma error: ${e.message}`);
+  logger.error(`Prisma error: ${e.message}`);
 
   // Extract model and operation for the error metric
   const queryParts = e.target?.split(" ") || ["unknown"];
@@ -152,11 +153,11 @@ prisma.$on("error", (e) => {
 
 // Handle graceful shutdown
 process.on("SIGTERM", async () => {
-  console.log("SIGTERM received, closing database connections");
+  logger.info("SIGTERM received, closing database connections");
   await prisma.$disconnect();
 });
 
 process.on("SIGINT", async () => {
-  console.log("SIGINT received, closing database connections");
+  logger.info("SIGINT received, closing database connections");
   await prisma.$disconnect();
 });
