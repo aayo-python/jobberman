@@ -3,6 +3,7 @@ import config from "config";
 import cors from "cors";
 import helmet from "helmet";
 import router from "./routes";
+import { prisma } from "./scripts";
 
 async function main() {
   const app = express();
@@ -23,7 +24,20 @@ async function main() {
   });
 }
 
-main().catch((error) => {
-  console.error("Error starting the server:", error);
-  process.exit(1);
+// Error handling for the main function
+main()
+  .then(async () => {
+    console.log("Server started successfully");
+  })
+  .catch(async (error) => {
+    console.log(`Failed to start server: ${error}`);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
+
+// Handle graceful shutdown
+process.on("SIGTERM", async () => {
+  console.log("SIGTERM received, shutting down gracefully");
+  await prisma.$disconnect();
+  process.exit(0);
 });
