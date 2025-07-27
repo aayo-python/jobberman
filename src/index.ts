@@ -2,8 +2,8 @@ import express from "express";
 import config from "config";
 import cors from "cors";
 import helmet from "helmet";
+import { connectionScript, prisma } from "./scripts";
 import router from "./routes";
-import { prisma } from "./scripts";
 import { logger } from "./utils/logger";
 
 async function main() {
@@ -21,6 +21,7 @@ async function main() {
   const port = config.get<number>("port");
 
   app.listen(port, () => {
+    connectionScript(false);
     logger.info(`Server running on port ${port}`);
   });
 }
@@ -31,7 +32,7 @@ main()
     logger.info("Server started successfully");
   })
   .catch(async (error) => {
-    logger.info(`Failed to start server: ${error}`);
+    logger.error(`Failed to start server: ${error}`);
     await prisma.$disconnect();
     process.exit(1);
   });
