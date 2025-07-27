@@ -1,6 +1,6 @@
 import nodemailer, { SendMailOptions } from "nodemailer";
 import config from "config";
-import log from "./logger";
+import { logger } from "./logger";
 
 const smtp = config.get<{
   user: string;
@@ -24,11 +24,11 @@ const transporter = nodemailer.createTransport({
 async function sendEmail(payload: SendMailOptions) {
   transporter.sendMail(payload, (err, info) => {
     if (err) {
-      log.error(err, "Error sending email");
+      logger.error(err.message, "Error sending email");
       return;
     }
 
-    log.info(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+    logger.info(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
   });
 }
 
