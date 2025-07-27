@@ -8,3 +8,5 @@ logs
 *.log
 notes.md
 aayo_notes.md
+gworkflows.yml
+deploy.yml
